@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<!--
+  manag.codes — Home page
+
+  Files:
+    index.html  this page's structure
+    styles.css  the warm theme and layout
+    script.js   background removal, the workspace table, My Outfits and tabs
+
+  Ids used by script.js: add-btn, file-input, save-btn, clear-btn, counter, status,
+  workspace, empty-state, outfits-grid, outfits-empty, ctx-menu, ctx-delete,
+  lightbox, lightbox-image, lightbox-title, lightbox-details, lightbox-close,
+  outfits-hint, color-drop-btn, picked, picked-swatch, picked-hex, picked-copy,
+  new-palette-btn, palettes-list, palettes-empty,
+  color-dialog, color-dialog-panel, color-dialog-title, color-wheel, color-value,
+  color-hex, color-preview, color-error, color-cancel, color-confirm,
+  panel-home, panel-outfits, panel-palettes.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!-- viewport-fit=cover lets the page use the full screen on phones with notches -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>manag.codes — Home</title>
+
+<!-- Fonts: Fraunces (headings) and Work Sans (body) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Site header: brand and the three section tabs (switched by script.js). -->
+<header>
+  <span class="brand">manag.codes</span>
+  <nav role="tablist" aria-label="Site sections">
+    <button role="tab" aria-selected="true" data-tab="home">Home</button>
+    <button role="tab" aria-selected="false" data-tab="outfits">My Outfits</button>
+    <button role="tab" aria-selected="false" data-tab="palettes">Color Palettes</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- HOME: upload photos, then arrange and resize them on the table. -->
+  <section id="panel-home">
+    <div class="intro">
+      <h1>Build a look on an open table</h1>
+      <p>Drop in photos of clothes and we'll lift each one off its background, keeping soft edges like fabric fringe and fine strands. Drag a piece to move it, or click it and drag a corner to resize. Use Color drop to read the hex code of any color you click. Works best on a plain background — if it can't be removed, the photo still comes in as-is.</p>
+    </div>
+
+    <!-- Toolbar: the counter text is filled in by script.js (limit lives there). -->
+    <div class="toolbar">
+      <button class="btn primary" id="add-btn">Add a photo</button>
+      <input type="file" id="file-input" accept="image/*" multiple hidden>
+      <button class="btn ghost" id="save-btn" disabled>Save to My Outfits</button>
+      <button class="btn ghost" id="clear-btn">Clear closet</button>
+      <!-- Color drop: reads the hex code of whatever the user clicks (see script.js). -->
+      <button class="btn ghost" id="color-drop-btn" type="button" aria-pressed="false">Color drop</button>
+      <div class="picked" id="picked" hidden>
+        <span class="picked-swatch" id="picked-swatch"></span>
+        <input class="picked-hex" id="picked-hex" type="text" size="7" readonly aria-label="Picked color hex code">
+        <button class="btn ghost small" id="picked-copy" type="button">Copy</button>
+      </div>
+      <span class="chip" id="counter"></span>
+    </div>
+    <p id="status" aria-live="polite"></p>
+
+    <!-- The table: photos are dropped here and pieces are added as children. -->
+    <div id="workspace">
+      <div id="empty-state">
+        <p>Nothing on the table yet. Drop a photo here, or add one above.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MY OUTFITS: shows the empty message until a look is saved, then a grid of looks. -->
+  <section id="panel-outfits" hidden>
+    <div class="outfits-wrap">
+      <p class="outfits-hint" id="outfits-hint" hidden>Click an outfit to view it larger. Click a name to rename it. Use Delete outfit to remove one (right-click works too).</p>
+      <p id="outfits-empty" class="panel-empty">Your saved outfits will live here once you save a look from the table.</p>
+      <div id="outfits-grid" class="outfits-grid" hidden></div>
+    </div>
+  </section>
+
+  <!-- COLOR PALETTES: create palettes and fill each with up to five colors. -->
+  <section id="panel-palettes" hidden>
+    <div class="palettes-wrap">
+      <div class="palettes-toolbar">
+        <button class="btn primary" id="new-palette-btn" type="button">New palette</button>
+        <p class="palettes-hint">Each palette holds up to five colors. Click a palette's name to rename it. Use the × on a color or Delete palette to remove them (right-click works too).</p>
+      </div>
+      <p id="palettes-empty" class="panel-empty">No palettes yet. Create one to start collecting colors.</p>
+      <div id="palettes-list" class="palettes-list" hidden></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Right-click menu, positioned and shown by script.js. -->
+<div class="ctx-menu" id="ctx-menu" role="menu" hidden>
+  <button type="button" role="menuitem" id="ctx-delete">Delete</button>
+</div>
+
+<!-- Outfit viewer: a saved outfit shown large. Opened by clicking a card in My Outfits;
+     closed with the button, the Escape key, or a click on the dark backdrop. -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lightbox-title" hidden>
+  <div class="lightbox-panel">
+    <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Close outfit">&times;</button>
+    <img class="lightbox-image" id="lightbox-image" alt="" draggable="false">
+    <p class="lightbox-title" id="lightbox-title"></p>
+    <p class="lightbox-details" id="lightbox-details"></p>
+  </div>
+</div>
+
+<!-- Add-color dialog: pick a color with the wheel (plus brightness slider) or type a hex
+     code; both stay in sync. Opened by a palette's "Add color" button. -->
+<div class="color-dialog" id="color-dialog" role="dialog" aria-modal="true" aria-labelledby="color-dialog-title" hidden>
+  <div class="color-dialog-panel" id="color-dialog-panel" tabindex="-1">
+    <h2 class="color-dialog-title" id="color-dialog-title">Add a color</h2>
+
+    <canvas class="color-wheel" id="color-wheel" aria-label="Color wheel: drag to choose a hue and saturation"></canvas>
+
+    <label class="color-field">
+      <span>Brightness</span>
+      <input type="range" id="color-value" min="0" max="100" step="1" value="100">
+    </label>
+
+    <label class="color-field">
+      <span>Hex code</span>
+      <input type="text" id="color-hex" class="color-hex" maxlength="7" size="9" placeholder="#AE6035"
+             autocomplete="off" autocapitalize="characters" spellcheck="false">
+    </label>
+
+    <div class="color-preview" id="color-preview"></div>
+    <p class="color-error" id="color-error" role="alert"></p>
+
+    <div class="dialog-actions">
+      <button class="btn ghost" id="color-cancel" type="button">Cancel</button>
+      <button class="btn primary" id="color-confirm" type="button">Add color</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

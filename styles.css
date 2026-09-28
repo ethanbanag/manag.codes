@@ -1,0 +1,675 @@
+/**
+ * manag.codes — warm theme
+ *
+ * Sections:
+ *   1. Design tokens (colors, radii, sizes, shadows, layers)
+ *   2. Base and typography
+ *   3. Header and tabs
+ *   4. Page layout and intro
+ *   5. Toolbar (buttons, counter, status)
+ *   6. Workspace (the table, pieces, resize handles)
+ *   7. My Outfits and placeholder panels
+ *   8. Right-click menu
+ *   9. Outfit viewer (lightbox) and add-color dialog
+ *  10. Color palettes
+ *  11. Color drop result
+ *  12. Small screens
+ */
+
+/* ============================================================ 1. Design tokens */
+:root {
+  /* Warm palette */
+  --cream: #F5EEDF;            /* page background */
+  --paper: #FBF6EC;            /* raised surfaces (table, cards, menu) */
+  --ink: #3B2E24;              /* main text */
+  --ink-soft: #6B5A4A;         /* secondary text */
+  --clay: #AE6035;             /* primary accent */
+  --clay-dark: #8F4C29;        /* accent hover / focus / status text */
+  --olive: #7C7A50;
+  --gold: #D8A34D;
+  --line: rgba(59, 46, 36, 0.18);
+  --focus: var(--clay-dark);
+  --drag-over-bg: #F0E4D2;     /* table color while a file is dragged over it */
+  --stripe: rgba(59, 46, 36, 0.03); /* faint fabric-like stripes on the table */
+  --on-accent: #fff;           /* text and rings drawn on top of the accent */
+  --danger: #A63A2B;           /* error messages */
+  --on-light-color: #2B211A;   /* text drawn on light palette colors */
+  --on-dark-color: #FFFFFF;    /* text drawn on dark palette colors */
+
+  /* Corner radii */
+  --radius-pill: 999px;
+  --radius-lg: 22px;           /* big panels */
+  --radius-md: 14px;           /* cards */
+  --radius-sm: 10px;           /* buttons, menu */
+  --radius-xs: 7px;            /* menu items */
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 14px;
+  --space-lg: 16px;
+  --space-xl: 26px;
+  --page-padding: clamp(20px, 4vw, 44px);
+  --header-padding-x: clamp(18px, 4vw, 40px);
+  --header-padding-y: 18px;
+
+  /* Sizes */
+  --page-max-width: 1040px;
+  --intro-max-width: 52ch;
+  --intro-title-gap: 10px;
+  --placeholder-text-max-width: 34ch;
+  --empty-text-max-width: 30ch;
+  --panel-min-height: min(50vh, 420px);
+  --outfit-empty-min-height: 340px;
+  --workspace-min-height: min(62vh, 560px);
+  --workspace-stripe-gap: 26px;
+  --outfit-card-min-width: 160px;
+  --menu-min-width: 150px;
+  --piece-outline-offset: 3px;
+  --handle-size: 14px;
+  --handle-size-touch: 22px;
+  --handle-border: 2px;
+  --handle-offset: -9px;       /* how far a handle sticks out of the piece's corner */
+  --handle-offset-touch: -13px;
+  --handle-hit-extra: -8px;    /* invisible hit area around a handle (negative inset) */
+  --handle-hit-extra-touch: -6px;
+
+  /* Shadows */
+  --shadow-piece: 0 6px 14px rgba(59, 46, 36, 0.25);
+  --shadow-piece-lifted: 0 10px 22px rgba(59, 46, 36, 0.32);
+  --shadow-handle: 0 1px 4px rgba(59, 46, 36, 0.4);
+  --shadow-menu: 0 10px 26px rgba(59, 46, 36, 0.25);
+  --shadow-card-hover: 0 6px 16px rgba(59, 46, 36, 0.16);
+  --shadow-lightbox: 0 20px 60px rgba(0, 0, 0, 0.45);
+
+  /* Motion */
+  --transition-fast: 0.15s ease;
+
+  /* Outfit viewer */
+  --lightbox-backdrop: rgba(30, 22, 16, 0.72);
+  --lightbox-max-width: 900px;
+  --lightbox-viewport-margin: 4vw;      /* breathing room kept around the viewer */
+  --lightbox-image-max-height: 72vh;
+  --lightbox-close-size: 38px;
+  --lightbox-padding: 22px;
+
+  /* Add-color dialog and palettes */
+  --dialog-max-width: 360px;
+  --wheel-size: 220px;
+  --color-preview-height: 44px;
+  --palette-column-height: 190px;
+  --palette-name-min-width: 12ch;
+  --palette-hex-font-size: 0.8rem;
+  --palette-hex-font-size-small: 0.62rem;
+  --color-delete-size: 22px;
+  --scrim: rgba(0, 0, 0, 0.55);        /* dark disc behind small controls drawn on colors */
+
+  /* Color drop result */
+  --picked-swatch-size: 22px;
+
+  /* Layers (stacking order) */
+  --z-handle: 5;
+  --z-header: 50;
+  --z-menu: 200;
+  --z-lightbox: 300;
+}
+
+/*
+ * Dark scheme: warm dark browns replace the cream surfaces.
+ * (Nested @media inside the rule relies on CSS nesting, supported by current browsers.)
+ */
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    --cream: #26201A;
+    --paper: #2E2620;
+    --ink: #F2E9DD;
+    --ink-soft: #C9B9A6;
+    --line: rgba(242, 233, 221, 0.16);
+  }
+}
+
+/* ================================================== 2. Base and typography */
+* { box-sizing: border-box; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: 'Work Sans', system-ui, sans-serif;
+  /* keep content clear of phone notches / system bars */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+h1, h2, .brand { font-family: 'Fraunces', Georgia, serif; }
+
+/* Hide anything with the `hidden` attribute, even if a rule sets `display`. */
+[hidden] { display: none !important; }
+
+/* ============================================================ 3. Header, tabs */
+header {
+  position: sticky;
+  top: 0;
+  top: env(safe-area-inset-top, 0px);  /* fallback line above, notch-aware line here */
+  z-index: var(--z-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+  padding: var(--header-padding-y) var(--header-padding-x);
+  background: var(--cream);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-size: 1.35rem;
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: 0.2px;
+  color: var(--ink);
+}
+
+nav {
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+nav button {
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 500;
+  padding: var(--space-sm) 18px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+nav button[aria-selected="true"] { background: var(--clay); color: var(--on-accent); }
+
+/* Keyboard focus ring for every interactive control. */
+nav button:focus-visible,
+button:focus-visible,
+input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* ==================================================== 4. Page layout and intro */
+main {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--page-padding);
+}
+.intro { max-width: var(--intro-max-width); margin-bottom: var(--space-xl); }
+.intro h1 {
+  margin: 0 0 var(--intro-title-gap);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 600;
+}
+.intro p { margin: 0; color: var(--ink-soft); line-height: 1.55; }
+
+/* =========================================== 5. Toolbar (buttons, counter, status) */
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 10px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.btn.primary { background: var(--clay); border-color: var(--clay); color: var(--on-accent); }
+.btn.primary:hover { background: var(--clay-dark); }
+.btn.ghost:hover { background: var(--line); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.chip {
+  padding: 6px var(--space-md);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+
+#status { min-height: 1.2em; font-size: 0.85rem; color: var(--clay-dark); }
+
+/* ================================== 6. Workspace (table, pieces, resize handles) */
+
+/* The table pieces are placed on. */
+#workspace {
+  position: relative;
+  min-height: var(--workspace-min-height);
+  overflow: hidden;
+  touch-action: none;          /* dragging must not scroll the page on touch screens */
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-lg);
+  background:
+    repeating-linear-gradient(135deg, transparent 0 var(--workspace-stripe-gap),
+      var(--stripe) var(--workspace-stripe-gap) calc(var(--workspace-stripe-gap) + 1px)),
+    var(--paper);
+}
+#workspace.drag-over { border-color: var(--clay); background-color: var(--drag-over-bg); }
+
+/* Message shown while the table is empty. */
+#empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: 20px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+#empty-state p { margin: 0; max-width: var(--empty-text-max-width); }
+
+/* A piece = wrapper (moves/resizes) + picture + corner handles. */
+.item {
+  position: absolute;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -webkit-touch-callout: none;  /* no iOS long-press image menu */
+}
+.item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;         /* pointer events go to the wrapper: no native image drag */
+  user-select: none;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  filter: drop-shadow(var(--shadow-piece));
+}
+.item.dragging { cursor: grabbing; }
+.item.dragging img { filter: drop-shadow(var(--shadow-piece-lifted)); }
+.item.selected { outline: 1.5px dashed var(--clay); outline-offset: var(--piece-outline-offset); }
+
+/* Resize handles: only visible on the selected piece. */
+.handle {
+  display: none;
+  position: absolute;
+  z-index: var(--z-handle);
+  width: var(--handle-size);
+  height: var(--handle-size);
+  background: var(--clay);
+  border: var(--handle-border) solid var(--on-accent);
+  border-radius: 50%;
+  box-shadow: var(--shadow-handle);
+  touch-action: none;
+}
+.handle::after {                /* larger invisible hit area, easier to grab */
+  content: '';
+  position: absolute;
+  inset: var(--handle-hit-extra);
+}
+.item.selected .handle { display: block; }
+.handle-nw { left: var(--handle-offset);  top: var(--handle-offset);    cursor: nwse-resize; }
+.handle-ne { right: var(--handle-offset); top: var(--handle-offset);    cursor: nesw-resize; }
+.handle-sw { left: var(--handle-offset);  bottom: var(--handle-offset); cursor: nesw-resize; }
+.handle-se { right: var(--handle-offset); bottom: var(--handle-offset); cursor: nwse-resize; }
+
+/* Touch screens: bigger handles. */
+@media (pointer: coarse) {
+  .handle { width: var(--handle-size-touch); height: var(--handle-size-touch); }
+  .handle::after { inset: var(--handle-hit-extra-touch); }
+  .handle-nw { left: var(--handle-offset-touch);  top: var(--handle-offset-touch); }
+  .handle-ne { right: var(--handle-offset-touch); top: var(--handle-offset-touch); }
+  .handle-sw { left: var(--handle-offset-touch);  bottom: var(--handle-offset-touch); }
+  .handle-se { right: var(--handle-offset-touch); bottom: var(--handle-offset-touch); }
+}
+
+/* ============================== 7. My Outfits and placeholder panels */
+
+/* Simple centered message panel (Color Palettes for now). */
+.panel-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--panel-min-height);
+  padding: 30px;
+  text-align: center;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.panel-placeholder p { max-width: var(--placeholder-text-max-width); line-height: 1.55; }
+
+/* My Outfits: either the empty message or a grid of saved looks. */
+.outfits-wrap {
+  min-height: var(--panel-min-height);
+  padding: var(--space-xl);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.panel-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--outfit-empty-min-height);
+  padding: 20px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.outfits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--outfit-card-min-width), 1fr));
+  gap: var(--space-lg);
+}
+.outfits-hint { margin: 0 0 var(--space-lg); font-size: 0.85rem; color: var(--ink-soft); }
+.outfit-card {
+  overflow: hidden;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+/* The picture is a button that opens the outfit in the viewer. */
+.outfit-preview { cursor: pointer; background: var(--paper); }
+.outfit-preview img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+.outfit-preview:hover { box-shadow: inset 0 0 0 2px var(--clay); }
+.outfit-preview:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+
+/* Under the picture: the editable label, then the piece count and Delete outfit. */
+.outfit-info { display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md) var(--space-md); }
+.outfit-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+.outfit-card .meta { font-size: 0.82rem; color: var(--ink-soft); }
+
+/* ================================================= 8. Right-click menu */
+.ctx-menu {
+  position: fixed;
+  z-index: var(--z-menu);
+  min-width: var(--menu-min-width);
+  padding: var(--space-xs);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-menu);
+}
+.ctx-menu button {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+.ctx-menu button:hover,
+.ctx-menu button:focus-visible { background: var(--line); }
+
+/* ==================================================== 9. Outfit viewer (lightbox) */
+/* Full-screen dark backdrop; clicking it closes the viewer. */
+.lightbox,
+.color-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-lightbox);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--lightbox-viewport-margin);
+  background: var(--lightbox-backdrop);
+}
+.lightbox-panel,
+.color-dialog-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  max-width: min(var(--lightbox-max-width), 100%);
+  max-height: 100%;
+  padding: var(--lightbox-padding);
+  overflow: auto;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lightbox);
+}
+.lightbox-image {
+  display: block;
+  max-width: 100%;
+  max-height: var(--lightbox-image-max-height);
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+.lightbox-title { margin: var(--space-xs) 0 0; font-family: 'Fraunces', Georgia, serif; font-size: 1.15rem; font-weight: 600; }
+.lightbox-details { margin: 0; font-size: 0.85rem; color: var(--ink-soft); }
+.lightbox-close {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: var(--lightbox-close-size);
+  height: var(--lightbox-close-size);
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--ink);
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.lightbox-close:hover { background: var(--line); }
+
+/* Add-color dialog: shares the backdrop and panel look above. */
+.color-dialog-panel {
+  align-items: stretch;
+  width: min(var(--dialog-max-width), 100%);
+  gap: var(--space-md);
+}
+.color-dialog-panel:focus { outline: none; }
+.color-dialog-title { margin: 0; font-size: 1.15rem; font-weight: 600; }
+
+.color-wheel {
+  align-self: center;
+  width: var(--wheel-size);
+  height: var(--wheel-size);
+  border-radius: 50%;
+  cursor: crosshair;
+  touch-action: none;          /* dragging on the wheel must not scroll the page */
+}
+.color-field { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); font-size: 0.9rem; }
+.color-field input[type="range"] { flex: 1; accent-color: var(--clay); }
+.color-hex {
+  width: 9ch;
+  padding: 7px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+}
+.color-preview {
+  height: var(--color-preview-height);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.color-error { min-height: 1.2em; margin: 0; font-size: 0.85rem; color: var(--danger); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-sm); }
+
+/* ============================================================ 10. Color palettes */
+.palettes-wrap {
+  min-height: var(--panel-min-height);
+  padding: var(--space-xl);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.palettes-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-md); margin-bottom: var(--space-xl); }
+.palettes-hint { margin: 0; font-size: 0.85rem; color: var(--ink-soft); }
+.palettes-list { display: grid; gap: var(--space-lg); }
+
+/* One palette: a header (name, count, Add color) above a row of color columns. */
+.palette {
+  overflow: hidden;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.palette-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+.palette-title { flex: 1 1 var(--palette-name-min-width); min-width: 0; margin: 0; }
+
+/* Names are text fields that look like headings until hovered or focused. */
+.palette-name,
+.outfit-name {
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  margin-left: calc(-1 * var(--space-sm));   /* keep the text aligned with the card's edge */
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  cursor: text;
+}
+.palette-name:hover,
+.outfit-name:hover { border-color: var(--line); }
+.palette-name:focus,
+.outfit-name:focus { background: var(--paper); border-color: var(--clay); }
+.palette-tools { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-sm) var(--space-md); }
+.palette-count { font-size: 0.85rem; color: var(--ink-soft); }
+
+/* The columns: JS sets the column count (one per allowed color). */
+.palette-columns { display: grid; gap: var(--space-sm); padding: 0 var(--space-md) var(--space-md); }
+.palette-color,
+.palette-slot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: var(--palette-column-height);
+  padding: var(--space-sm) var(--space-xs);
+  border-radius: var(--radius-sm);
+}
+.palette-color { position: relative; border: 1px solid var(--line); }
+.palette-color.light { color: var(--on-light-color); }
+.palette-color.dark { color: var(--on-dark-color); }
+.palette-hex {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--palette-hex-font-size);
+  font-weight: 600;
+}
+.palette-slot { border: 2px dashed var(--line); }   /* an empty slot still to be filled */
+
+/* The × that removes a color: shown on hover or keyboard focus, always on touch screens. */
+.palette-color-delete {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--color-delete-size);
+  height: var(--color-delete-size);
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--on-dark-color);
+  background: var(--scrim);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+.palette-color:hover .palette-color-delete,
+.palette-color:focus-within .palette-color-delete,
+.palette-color-delete:focus-visible { opacity: 1; }
+@media (hover: none) { .palette-color-delete { opacity: 1; } }
+
+/* "Delete palette" while it waits for its confirming second click. */
+.btn.danger { color: var(--on-accent); background: var(--danger); border-color: var(--danger); }
+.btn.danger:hover { background: var(--danger); }
+
+/* ========================================================= 11. Color drop result */
+.btn.small { padding: 6px 12px; font-size: 0.85rem; }
+.picked {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-md);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+.picked-swatch {
+  width: var(--picked-swatch-size);
+  height: var(--picked-swatch-size);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+.picked-hex {
+  width: 8ch;
+  padding: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+}
+/* While the color drop is waiting for a click on a piece. */
+#workspace.picking,
+#workspace.picking .item { cursor: crosshair; }
+#workspace.picking .handle { pointer-events: none; }
+
+/* ================================================== 12. Small screens */
+/* (Media queries cannot read custom properties, so the breakpoint is written out.) */
+@media (max-width: 520px) {
+  header { flex-direction: column; align-items: flex-start; }
+  nav { width: 100%; justify-content: space-between; }
+  nav button { flex: 1; padding: var(--space-sm) 6px; font-size: 0.85rem; text-align: center; }
+  .palette-columns { gap: var(--space-xs); }
+  .palette-hex { font-size: var(--palette-hex-font-size-small); }
+}
